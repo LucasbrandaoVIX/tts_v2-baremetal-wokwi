@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "author": "TTS_V2 Implementation",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-arduino-uno",
+      "id": "mcu",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 20,
+      "left": 300,
+      "attrs": {
+        "color": "red"
+      }
+    },
+    {
+      "type": "wokwi-led", 
+      "id": "led2",
+      "top": 70,
+      "left": 300,
+      "attrs": {
+        "color": "green"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led3", 
+      "top": 120,
+      "left": 300,
+      "attrs": {
+        "color": "blue"
+      }
+    },
+    {
+      "type": "wokwi-7segment",
+      "id": "display1",
+      "top": 170,
+      "left": 200,
+      "attrs": {
+        "common": "cathode"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot1",
+      "top": 300,
+      "left": 200,
+      "attrs": {
+        "value": "500"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 30,
+      "left": 250,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 80,
+      "left": 250,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": 130,
+      "left": 250,
+      "attrs": {
+        "value": "220"
+      }
+    }
+  ],
+  "connections": [
+    ["mcu:2", "r1:1", "green", []],
+    ["r1:2", "led1:A", "green", []],
+    ["led1:C", "mcu:GND.1", "black", []],
+    ["mcu:3", "r2:1", "green", []],
+    ["r2:2", "led2:A", "green", []],
+    ["led2:C", "mcu:GND.1", "black", []],
+    ["mcu:4", "r3:1", "green", []],
+    ["r3:2", "led3:A", "green", []],
+    ["led3:C", "mcu:GND.1", "black", []],
+    ["mcu:5", "display1:A", "red", []],
+    ["mcu:6", "display1:B", "red", []],
+    ["mcu:7", "display1:C", "red", []],
+    ["mcu:8", "display1:D", "red", []],
+    ["mcu:9", "display1:E", "red", []],
+    ["mcu:10", "display1:F", "red", []],
+    ["mcu:11", "display1:G", "red", []],
+    ["display1:COM", "mcu:GND.1", "black", []],
+    ["pot1:VCC", "mcu:5V", "red", []],
+    ["pot1:GND", "mcu:GND.2", "black", []],
+    ["pot1:SIG", "mcu:A0", "yellow", []]
+  ]
+}
