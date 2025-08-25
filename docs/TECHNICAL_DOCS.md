@@ -15,30 +15,46 @@ typedef struct {
     uint32_t delay;      // Delay até próxima execução
 } TaskInfo;
 ```
+# Documentação técnica - TTS_V2
 
-#### API Principal
+## Arquitetura do sistema
+
+### Kernel TTS (Time Triggered Scheduler)
+
+O kernel `TTS_V2` é um escalonador cooperativo baseado em tempo com as seguintes características:
+
+#### Estruturas de dados
+
+```c
+typedef struct {
+    void (*task)(void);  /* Ponteiro para função da tarefa */
+    uint32_t period;     /* Período de execução (em ticks) */
+    uint32_t delay;      /* Delay até a próxima execução */
+} TaskInfo;
+```
+
+#### API principal
 
 | Função | Descrição | Parâmetros |
 |--------|-----------|------------|
 | `Task_Init()` | Inicializa o kernel | Nenhum |
 | `Task_Add()` | Adiciona nova tarefa | `task`, `period`, `delay` |
 | `Task_Dispatch()` | Executa tarefas prontas | Nenhum |
-| `Task_Update()` | Atualiza contadores | Nenhum (ISR) |
+| `Task_Update()` | Atualiza contadores (ISR) | Nenhum |
 
 ### Temporização
 
-- **Resolução**: 1ms (SysTick a 1kHz)
-- **Precisão**: ±1ms
-- **Jitter**: Mínimo (escalonamento cooperativo)
+- Resolução: 1 ms (SysTick ou timer configurado para 1 kHz)
+- Precisão: ±1 ms
 
-### Mapeamento de Hardware
+### Mapeamento de hardware
 
 #### EFM32GG995F1024
 
 | Periférico | Pinos | Função |
 |------------|-------|--------|
 | LEDs | PE2, PE3, PE4 | LED1, LED2, LED3 |
-| Display 7-seg | PD0-PD6 | Segmentos A-G |
+| Display 7-seg | PD0–PD6 | Segmentos A–G |
 | ADC | PA0 | Canal 0 |
 
 #### Arduino Uno (Wokwi)
@@ -46,101 +62,82 @@ typedef struct {
 | Periférico | Pinos | Função |
 |------------|-------|--------|
 | LEDs | D2, D3, D4 | LED1, LED2, LED3 |
-| Display 7-seg | D5-D11 | Segmentos A-G |
+| Display 7-seg | D5–D11 | Segmentos A–G |
 | ADC | A0 | Canal analógico |
 
-## Análise de Desempenho
+## Análise de desempenho
 
-### Utilização da CPU
+### Utilização estimada da CPU
 
-| Tarefa | Período | Tempo Exec. | CPU % |
-|--------|---------|-------------|-------|
-| Display | 1000ms | ~10µs | 0.001% |
-| LED1 | 500ms | ~5µs | 0.001% |
-| LED2 | 750ms | ~5µs | <0.001% |
-| LED3 | 1200ms | ~5µs | <0.001% |
-| ADC | 100ms | ~20µs | 0.02% |
-| **Total** | - | - | **~0.023%** |
+| Tarefa | Período | Tempo de execução (estimado) | Observação |
+|--------|---------|------------------------------|-----------|
+| Display | 1000 ms | ~10 µs | Atualização de 7 segmentos |
+| LED1 | 500 ms | ~5 µs | Toggle de GPIO |
+| LED2 | 750 ms | ~5 µs | Toggle de GPIO |
+| LED3 | 1200 ms | ~5 µs | Toggle de GPIO |
+| ADC | 100 ms | ~20 µs | Conversão ADC (polling) |
 
-### Análise Temporal
+### Considerações temporais
 
-- **Overhead do Kernel**: <1µs por tick
-- **Latência Máxima**: 1ms (período do SysTick)
-- **Precisão**: Determinística para períodos múltiplos de 1ms
+- Overhead do kernel: pequeno, procedimentos críticos executados em ISR são mínimos.
+- Latência máxima: 1 ms (resolução do tick).
 
-## Implementação dos Drivers
+## Implementação dos drivers
 
-### Driver LED
+### Driver de LED
+
+Exemplo de operação direta em registradores (EFM32/AVR):
 
 ```c
-// Controle direto de registradores GPIO
-void LED_Toggle(uint32_t leds) {
-    GPIO->P[4].DOUTTGL = leds;  // EFM32
-    // ou
-    PORTD ^= (1 << pin);        // Arduino
-}
+/* EFM32 */
+GPIO->P[4].DOUTTGL = leds;
+
+/* AVR */
+PORTD ^= (1 << pin);
 ```
 
-### Driver Display 7-Segmentos
+### Driver do display 7 segmentos
 
-- **Padrões**: Array de 10 elementos (dígitos 0-9)
-- **Tipo**: Cátodo comum
-- **Controle**: 7 pinos GPIO individuais
+- Padrões: array com padrões para 0–9.
+- Tipo: cátodo comum (no exemplo fornecido).
 
 ### Driver ADC
 
-- **Resolução**: 12 bits (0-4095)
-- **Referência**: VDD (3.3V ou 5V)
-- **Tempo de Conversão**: ~10µs
+- Resolução típica: 12 bits (dependendo do dispositivo alvo).
+- Referência: VDD (ou AVCC no AVR).
 
-## Debugging e Monitoramento
+## Debugging e monitoramento
 
-### Métodos de Debug
+### Métodos recomendados
 
-1. **LEDs de Status**: Indicação visual do funcionamento
-2. **Display**: Contador visual para verificar temporização
-3. **ADC**: Leitura contínua para teste de responsividade
+1. LEDs de status para validar o escalonador em tempo real.
+2. Display para verificação visual do contador.
+3. Valores de ADC para validar entradas analógicas.
 
-### Análise de Problemas Comuns
+### Problemas comuns e soluções
 
-| Problema | Sintoma | Solução |
-|----------|---------|---------|
-| Jitter excessivo | LEDs irregulares | Verificar ISR |
-| Display incorreto | Números errados | Verificar padrões |
-| ADC não funciona | Valor fixo | Verificar pinos |
+| Problema | Sintoma | Ação recomendada |
+|----------|---------|------------------|
+| Jitter excessivo | Saídas piscando irregularmente | Verificar se ISR está sobrecarregada; reduzir trabalho no ISR |
+| Display incorreto | Dígitos errados ou segmentos persistentes | Verificar padrões de segmentos e inicialização de GPIO |
+| ADC com valor constante | Valor fixo sem variação | Verificar referência e pino de entrada |
 
-## Extensões Possíveis
+## Extensões possíveis
 
-### Funcionalidades Avançadas
-
-1. **Prioridades de Tarefas**: Implementar escalonamento por prioridade
-2. **Comunicação Serial**: Debug via UART
-3. **Watchdog**: Monitoramento de sistema
-4. **Sleep Modes**: Economia de energia
-
-### Exemplo de Extensão
-
-```c
-// Tarefa com prioridade alta
-Task_Add_Priority(Task_Critical, 10, 0, HIGH_PRIORITY);
-
-// Sistema de mensagens entre tarefas
-Message_Send(TASK_ADC, TASK_DISPLAY, adc_data);
-```
+- Adicionar prioridades de tarefa e escalonamento preemptivo.
+- Integrar comunicação serial (UART) para debug e telemetria.
+- Adicionar watchdog hardware para robustez.
 
 ## Compatibilidade
 
-### Plataformas Suportadas
+Plataformas alvo e observações:
 
-- ✅ EFM32GG (Cortex-M3)
-- ✅ Arduino Uno (ATmega328P)
-- ✅ Wokwi Simulator
-- 🔄 STM32F4 (adaptação necessária)
-- 🔄 ESP32 (adaptação necessária)
+- EFM32GG (Cortex-M3): alvo primário.
+- Arduino Uno (ATmega328P): usado para simulação no Wokwi.
+- Plataformas adicionais (STM32, ESP32) requerem adaptação do hardware abstraction layer.
 
-### Requisitos Mínimos
+## Requisitos mínimos
 
-- **RAM**: 512 bytes
-- **Flash**: 4KB
-- **Timer**: 1 timer de 16/32 bits
-- **GPIO**: 10 pinos mínimo
+- RAM: ~512 bytes (dependendo das estruturas alocadas).
+- Flash: ~4 KB (depende do compilador e opções de link).
+- Timer: ao menos um timer de 16 bits para gerar ticks com precisão.

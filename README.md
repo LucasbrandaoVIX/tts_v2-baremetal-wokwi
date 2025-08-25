@@ -1,22 +1,24 @@
 # TTS_V2 - Time Triggered Scheduler Implementation (Bare Metal)
 
+Authors:
+- Lucas Dantas Brandão
+- Gusmar Gianordoli Santana
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform: EFM32GG](https://img.shields.io/badge/Platform-EFM32GG-blue.svg)]()
 [![Simulator: Wokwi](https://img.shields.io/badge/Simulator-Wokwi-green.svg)](https://wokwi.com)
 
-## 🎯 Descrição do Projeto
+## Descrição do projeto
 
-Este projeto implementa um sistema **TTS (Time Triggered Scheduler) versão 2** para microcontroladores EFM32GG, utilizando **programação bare metal** (sem bibliotecas Arduino). O sistema executa **5 tarefas concorrentes** com diferentes períodos de execução de forma determinística.
+Este repositório contém a implementação do Time Triggered Scheduler (TTS) versão 2 para microcontroladores EFM32GG, desenvolvida em programação bare metal (sem uso de bibliotecas Arduino). O sistema executa cinco tarefas concorrentes com períodos distintos e comportamento determinístico.
 
-### ✨ Principais Características
+### Principais características
 
-- 🔥 **100% Bare Metal** - ZERO bibliotecas Arduino (corrigido v2.1)
-- ⚡ **5 Tarefas Simultâneas** com períodos diferentes
-- 🎯 **Escalonamento Determinístico** com precisão de 1ms
-- 🔧 **Dual Target**: EFM32GG (hardware) + Arduino (simulação)
-- 📊 **Overhead Mínimo** (<0.1% de utilização da CPU)
-- 🚀 **Pronto para Wokwi** - Link direto disponível
-- ⚠️ **Conformidade Total** - Atende 100% das especificações do projeto
+- Implementação bare metal (sem bibliotecas Arduino)
+- Execução de cinco tarefas simultâneas com períodos configuráveis
+- Escalonamento determinístico com resolução de 1 ms
+- Suporte a execução em hardware EFM32GG e simulação no Wokwi (adaptado)
+- Uso de recursos mínimos de CPU
 
 ## Funcionalidades Implementadas
 
@@ -100,39 +102,35 @@ tts_v2-baremetal-wokwi/
 ### ADC:
 - Canal 0: PA0 (conectado ao potenciômetro)
 
-## Como Usar no Wokwi
+## Uso no Wokwi
 
-### 🔗 **Link Direto do Projeto:**
+Link de criação de projeto no Wokwi:
 
-**[👉 CLIQUE AQUI PARA ABRIR NO WOKWI](https://wokwi.com/projects/new/arduino-uno)**
+[https://wokwi.com/projects/new/arduino-uno](https://wokwi.com/projects/new/arduino-uno)
 
-### 📋 **Instruções para Importar:**
+Instruções de importação:
 
-1. **Abra o link acima**
-2. **Delete o código padrão** do sketch.ino
-3. **Copie e cole** todo o conteúdo do arquivo `sketch.ino` deste projeto
-4. **Clique em "diagram.json"** no painel de arquivos
-5. **Delete o conteúdo** e cole o conteúdo do arquivo `diagram.json` deste projeto
-6. **Clique em "Start Simulation"** ▶️
+1. Abra o link acima.
+2. Substitua o conteúdo padrão do editor pelo código do arquivo `wokwi/sketch.ino` deste repositório.
+3. Substitua o conteúdo do arquivo `diagram.json` do projeto pelo arquivo `wokwi/diagram.json` deste repositório.
+4. Inicie a simulação.
 
-### ⚡ **Resultado Esperado:**
+Resultado esperado:
 
-- ✅ Display 7 segmentos contando 0→1→2→...→9→0 (1 segundo cada)
-- ✅ LED Vermelho piscando a cada 500ms
-- ✅ LED Verde piscando a cada 750ms  
-- ✅ LED Azul piscando a cada 1200ms
-- ✅ Potenciômetro sendo lido a cada 100ms
+- Display 7 segmentos: contador 0–9 com período de 1 s
+- LED1: piscando a cada 500 ms
+- LED2: piscando a cada 750 ms
+- LED3: piscando a cada 1200 ms
+- Leitura de ADC a cada 100 ms
 
-### 🔧 **Alternativamente - Criação Manual:**
+Alternativa (criação manual do circuito no Wokwi):
 
-1. Acesse: https://wokwi.com/projects/new/arduino-uno
-2. Adicione os componentes:
-   - 3x LEDs (vermelho, verde, azul) nos pinos 2, 3, 4
-   - 3x Resistores 220Ω para os LEDs
-   - 1x Display 7 segmentos nos pinos 5-11
-   - 1x Potenciômetro no pino A0
-3. Faça as conexões conforme diagram.json
-4. Cole o código do sketch.ino
+1. Crie um novo projeto Arduino Uno em Wokwi.
+2. Adicione os seguintes componentes e conexões conforme `wokwi/diagram.json`:
+   - 3 LEDs nos pinos digitais 2, 3 e 4 com resistores de 220 Ω
+   - 1 display 7 segmentos conectado aos pinos digitais 5–11
+   - 1 potenciômetro conectado a A0
+3. Cole o código do arquivo `wokwi/sketch.ino` no editor e inicie a simulação.
 
 ## Compilação
 

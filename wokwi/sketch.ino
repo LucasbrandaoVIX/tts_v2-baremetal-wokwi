@@ -1,25 +1,28 @@
 /** ***************************************************************************
  * @file    sketch.ino
- * @brief   TTS_V2 Implementation - 100% BARE METAL (NO ARDUINO LIBRARIES)
+ * @brief   Implementação TTS_V2 - 100% BARE METAL (SEM BIBLIOTECAS ARDUINO)
  * @version 2.1
- * @note    Tasks:
- *          1. Display 7-segment: 0-9 counter every 1 second
- *          2. LED1: Toggle every 500ms
- *          3. LED2: Toggle every 750ms
- *          4. LED3: Toggle every 1200ms
- *          5. ADC: Read every 100ms
- * @warning NO Arduino libraries used - Pure AVR bare metal code!
-******************************************************************************/
+ * @authors
+ *   - Lucas Dantas Brandão
+ *   - Gusmar Gianordoli Santana
+ * @note    Tarefas:
+ *          1. Display 7 segmentos: contador 0-9 a cada 1 segundo
+ *          2. LED1: pisca a cada 500ms
+ *          3. LED2: pisca a cada 750ms
+ *          4. LED3: pisca a cada 1200ms
+ *          5. ADC: lê a cada 100ms
+ * @warning SEM bibliotecas Arduino - Código puro AVR!
+ ******************************************************************************/
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-// Pin definitions for Arduino Uno (AVR ATmega328P)
+// Definição dos pinos para Arduino Uno (AVR ATmega328P)
 #define LED1_PIN 2  // PD2
 #define LED2_PIN 3  // PD3
 #define LED3_PIN 4  // PD4
 
-// Display 7-segment pins (Port B and D)
+// Pinos do display 7 segmentos (Porta B e D)
 #define SEG_A 5     // PD5
 #define SEG_B 6     // PD6
 #define SEG_C 7     // PD7
@@ -31,20 +34,20 @@
 #define ADC_CHANNEL 0
 #define TASK_MAXCNT 10
 
-// Task structure
+// Estrutura das tarefas
 typedef struct {
     void (*task)(void);
     unsigned long period;
     unsigned long delay;
 } TaskInfo;
 
-// Global variables
+// Variáveis globais
 static TaskInfo taskinfo[TASK_MAXCNT];
 static volatile unsigned long task_tickcounter = 0;
 static unsigned char display_counter = 0;
 static unsigned int adc_value = 0;
 
-// 7-segment patterns for digits 0-9
+// Padrões dos dígitos 0-9 para display 7 segmentos
 const unsigned char digit_patterns[10] = {
     0b00111111, // 0
     0b00000110, // 1
@@ -59,11 +62,11 @@ const unsigned char digit_patterns[10] = {
 };
 
 /** ***************************************************************************
- * @brief  BARE METAL Hardware Abstraction Functions
- * @note   NO Arduino libraries - Direct register manipulation
+ * @brief  Funções básicas para controlar hardware
+ * @note   SEM bibliotecas Arduino - Manipulação direta dos registradores
  */
 
-// BARE METAL: Set pin as output
+// Configura pino como saída
 void set_pin_output(unsigned char port, unsigned char pin) {
     if (port == 'B') {
         DDRB |= (1 << pin);
@@ -72,7 +75,7 @@ void set_pin_output(unsigned char port, unsigned char pin) {
     }
 }
 
-// BARE METAL: Set pin HIGH
+// Liga pino (5V)
 void set_pin_high(unsigned char port, unsigned char pin) {
     if (port == 'B') {
         PORTB |= (1 << pin);
@@ -81,7 +84,7 @@ void set_pin_high(unsigned char port, unsigned char pin) {
     }
 }
 
-// BARE METAL: Set pin LOW
+// Desliga pino (0V)
 void set_pin_low(unsigned char port, unsigned char pin) {
     if (port == 'B') {
         PORTB &= ~(1 << pin);
@@ -90,7 +93,7 @@ void set_pin_low(unsigned char port, unsigned char pin) {
     }
 }
 
-// BARE METAL: Toggle pin
+// Inverte estado do pino (liga se tá desligado, desliga se tá ligado)
 void toggle_pin(unsigned char port, unsigned char pin) {
     if (port == 'B') {
         PORTB ^= (1 << pin);
@@ -99,7 +102,7 @@ void toggle_pin(unsigned char port, unsigned char pin) {
     }
 }
 
-// BARE METAL: Read pin state
+// Lê estado do pino
 unsigned char read_pin(unsigned char port, unsigned char pin) {
     if (port == 'B') {
         return (PINB & (1 << pin)) ? 1 : 0;
@@ -109,50 +112,50 @@ unsigned char read_pin(unsigned char port, unsigned char pin) {
     return 0;
 }
 
-// BARE METAL: ADC initialization
+// Inicializa conversor ADC
 void adc_init(void) {
-    // Set ADC reference to AVCC
+    // Configura referência ADC para AVCC
     ADMUX = (1 << REFS0);
     
-    // Enable ADC and set prescaler to 128 (16MHz/128 = 125kHz)
+    // Liga ADC e configura prescaler para 128 (16MHz/128 = 125kHz)
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 }
 
-// BARE METAL: Read ADC value
+// Lê valor do ADC
 unsigned int adc_read(unsigned char channel) {
-    // Select ADC channel
+    // Seleciona canal do ADC
     ADMUX = (ADMUX & 0xF0) | (channel & 0x0F);
     
-    // Start conversion
+    // Inicia conversão
     ADCSRA |= (1 << ADSC);
     
-    // Wait for conversion to complete
+    // Espera conversão terminar
     while (ADCSRA & (1 << ADSC));
     
-    // Return ADC result
+    // Retorna resultado do ADC
     return ADC;
 }
 
 /** ***************************************************************************
- * @brief  Timer1 interrupt handler (1ms) - BARE METAL
+ * @brief  Interrupção do Timer1 (1ms)
  */
 ISR(TIMER1_COMPA_vect) {
     task_tickcounter++;
 }
 
 /** ***************************************************************************
- * @brief  Task functions - 100% BARE METAL
+ * @brief  Funções das tarefas
  */
 void Task_DisplayCounter(void) {
     unsigned char pattern = digit_patterns[display_counter];
     
-    // Update 7-segment display using BARE METAL register access
-    // Segments A,B,C (PD5,PD6,PD7)
+    // Atualiza display 7 segmentos
+    // Segmentos A,B,C (PD5,PD6,PD7)
     if (pattern & 0x01) set_pin_high('D', 5); else set_pin_low('D', 5);  // A
     if (pattern & 0x02) set_pin_high('D', 6); else set_pin_low('D', 6);  // B  
     if (pattern & 0x04) set_pin_high('D', 7); else set_pin_low('D', 7);  // C
     
-    // Segments D,E,F,G (PB0,PB1,PB2,PB3)
+    // Segmentos D,E,F,G (PB0,PB1,PB2,PB3)
     if (pattern & 0x08) set_pin_high('B', 0); else set_pin_low('B', 0);  // D
     if (pattern & 0x10) set_pin_high('B', 1); else set_pin_low('B', 1);  // E
     if (pattern & 0x20) set_pin_high('B', 2); else set_pin_low('B', 2);  // F
@@ -165,23 +168,23 @@ void Task_DisplayCounter(void) {
 }
 
 void Task_LED1_Blinker(void) {
-    toggle_pin('D', 2);  // BARE METAL: Toggle PD2
+    toggle_pin('D', 2);  // Inverte LED1 (PD2)
 }
 
 void Task_LED2_Blinker(void) {
-    toggle_pin('D', 3);  // BARE METAL: Toggle PD3
+    toggle_pin('D', 3);  // Inverte LED2 (PD3)
 }
 
 void Task_LED3_Blinker(void) {
-    toggle_pin('D', 4);  // BARE METAL: Toggle PD4
+    toggle_pin('D', 4);  // Inverte LED3 (PD4)
 }
 
 void Task_ADC_Read(void) {
-    adc_value = adc_read(ADC_CHANNEL);  // BARE METAL: Direct ADC read
+    adc_value = adc_read(ADC_CHANNEL);  // Lê ADC
 }
 
 /** ***************************************************************************
- * @brief  TTS Kernel functions
+ * @brief  Funções do kernel TTS
  */
 void Task_Init(void) {
     for (int i = 0; i < TASK_MAXCNT; i++) {
@@ -208,12 +211,12 @@ void Task_Dispatch(void) {
     unsigned char dispatch = 0;
     TaskInfo *p;
     
-    cli(); // Disable interrupts
+    cli(); // Desabilita interrupções
     if (task_tickcounter > 0) {
         task_tickcounter--;
         dispatch = 1;
     }
-    sei(); // Enable interrupts
+    sei(); // Habilita interrupções
     
     while (dispatch) {
         for (int i = 0; i < TASK_MAXCNT; i++) {
@@ -222,7 +225,7 @@ void Task_Dispatch(void) {
                 if (p->delay == 0) {
                     p->task();
                     if (p->period == 0) {
-                        // One-time task
+                        // Tarefa de uma vez só
                         p->task = 0;
                         p->period = 0;
                     } else {
@@ -246,31 +249,31 @@ void Task_Dispatch(void) {
 }
 
 /** ***************************************************************************
- * @brief  Setup function - 100% BARE METAL INITIALIZATION
- * @note   NO Arduino functions - Direct AVR register configuration
+ * @brief  Configuração inicial - SEM BIBLIOTECAS ARDUINO
+ * @note   Configuração direta dos registradores AVR
  */
 void setup() {
-    // BARE METAL: Configure GPIO pins as outputs
+    // Configura pinos GPIO como saídas
     // LEDs: PD2, PD3, PD4
     set_pin_output('D', 2);  // LED1
     set_pin_output('D', 3);  // LED2  
     set_pin_output('D', 4);  // LED3
     
-    // 7-Segment Display pins: PD5,PD6,PD7 and PB0,PB1,PB2,PB3
-    set_pin_output('D', 5);  // Segment A
-    set_pin_output('D', 6);  // Segment B
-    set_pin_output('D', 7);  // Segment C
-    set_pin_output('B', 0);  // Segment D
-    set_pin_output('B', 1);  // Segment E
-    set_pin_output('B', 2);  // Segment F
-    set_pin_output('B', 3);  // Segment G
+    // Pinos do Display 7 segmentos: PD5,PD6,PD7 e PB0,PB1,PB2,PB3
+    set_pin_output('D', 5);  // Segmento A
+    set_pin_output('D', 6);  // Segmento B
+    set_pin_output('D', 7);  // Segmento C
+    set_pin_output('B', 0);  // Segmento D
+    set_pin_output('B', 1);  // Segmento E
+    set_pin_output('B', 2);  // Segmento F
+    set_pin_output('B', 3);  // Segmento G
     
-    // BARE METAL: Initialize all pins to LOW
+    // Inicializa todos os pinos desligados
     set_pin_low('D', 2); set_pin_low('D', 3); set_pin_low('D', 4);
     set_pin_low('D', 5); set_pin_low('D', 6); set_pin_low('D', 7);
     set_pin_low('B', 0); set_pin_low('B', 1); set_pin_low('B', 2); set_pin_low('B', 3);
     
-    // BARE METAL: Initialize display to show "0"
+    // Inicializa display mostrando "0"
     unsigned char pattern = digit_patterns[0];
     if (pattern & 0x01) set_pin_high('D', 5); // A
     if (pattern & 0x02) set_pin_high('D', 6); // B
@@ -279,43 +282,43 @@ void setup() {
     if (pattern & 0x10) set_pin_high('B', 1); // E
     if (pattern & 0x20) set_pin_high('B', 2); // F
     
-    // BARE METAL: Setup Timer1 for 1ms interrupts (NO Arduino functions)
-    cli();  // Disable global interrupts
+    // Configura Timer1 para interrupção de 1ms
+    cli();  // Desabilita interrupções globais
     
-    // Configure Timer1 in CTC mode
-    TCCR1A = 0;                    // Clear Timer1 control register A
-    TCCR1B = 0;                    // Clear Timer1 control register B
-    TCNT1 = 0;                     // Initialize counter value to 0
+    // Configura Timer1 em modo CTC
+    TCCR1A = 0;                    // Limpa registrador de controle A do Timer1
+    TCCR1B = 0;                    // Limpa registrador de controle B do Timer1
+    TCNT1 = 0;                     // Zera contador
     
-    // Set compare value for 1ms @ 16MHz with 64 prescaler
+    // Configura valor de comparação para 1ms @ 16MHz com prescaler 64
     // (16,000,000 / 64) / 1000 - 1 = 249
     OCR1A = 249;
     
-    // Configure Timer1: CTC mode + 64 prescaler
-    TCCR1B |= (1 << WGM12);        // CTC mode
-    TCCR1B |= (1 << CS11) | (1 << CS10);  // 64 prescaler
+    // Configura Timer1: modo CTC + prescaler 64
+    TCCR1B |= (1 << WGM12);        // Modo CTC
+    TCCR1B |= (1 << CS11) | (1 << CS10);  // Prescaler 64
     
-    // Enable Timer1 compare interrupt
+    // Habilita interrupção de comparação do Timer1
     TIMSK1 |= (1 << OCIE1A);
     
-    sei();  // Enable global interrupts
+    sei();  // Habilita interrupções globais
     
-    // BARE METAL: Initialize ADC
+    // Inicializa ADC
     adc_init();
     
-    // Initialize TTS kernel
+    // Inicializa kernel TTS
     Task_Init();
     
-    // Add tasks with different periods (in milliseconds)
-    Task_Add(Task_DisplayCounter, 1000, 0);    // Display every 1s
-    Task_Add(Task_LED1_Blinker, 500, 100);     // LED1 every 500ms, delay 100ms
-    Task_Add(Task_LED2_Blinker, 750, 200);     // LED2 every 750ms, delay 200ms
-    Task_Add(Task_LED3_Blinker, 1200, 300);    // LED3 every 1200ms, delay 300ms
-    Task_Add(Task_ADC_Read, 100, 50);          // ADC every 100ms, delay 50ms
+    // Adiciona tarefas com períodos diferentes (em milissegundos)
+    Task_Add(Task_DisplayCounter, 1000, 0);    // Display a cada 1s
+    Task_Add(Task_LED1_Blinker, 500, 100);     // LED1 a cada 500ms, atraso 100ms
+    Task_Add(Task_LED2_Blinker, 750, 200);     // LED2 a cada 750ms, atraso 200ms
+    Task_Add(Task_LED3_Blinker, 1200, 300);    // LED3 a cada 1200ms, atraso 300ms
+    Task_Add(Task_ADC_Read, 100, 50);          // ADC a cada 100ms, atraso 50ms
 }
 
 /** ***************************************************************************
- * @brief  Main loop
+ * @brief  Loop principal
  */
 void loop() {
     Task_Dispatch();

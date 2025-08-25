@@ -1,37 +1,22 @@
-## 🚀 LINK DIRETO PARA O WOKWI
+## Instruções para uso no Wokwi
 
-### Para usar o projeto imediatamente:
+Procedimento para executar o projeto no Wokwi:
 
-1. **[CLIQUE AQUI - PROJETO TTS_V2 NO WOKWI](https://wokwi.com/projects/new/arduino-uno)**
+1. Acesse o endereço: https://wokwi.com/projects/new/arduino-uno
+2. Substitua o código do editor pelo conteúdo do arquivo `wokwi/sketch.ino` deste repositório.
+3. Substitua o conteúdo do arquivo `diagram.json` do projeto pelo arquivo `wokwi/diagram.json` deste repositório.
+4. Inicie a simulação.
 
-2. **Substitua o código** pelo conteúdo do arquivo `sketch.ino`
+Conteúdo para copiar diretamente:
 
-3. **Importe o circuito** usando o arquivo `diagram.json`:
-   - Clique no ícone de "+" ao lado de "diagram.json"
-   - Delete o conteúdo atual
-   - Cole o conteúdo do arquivo `diagram.json` deste projeto
+Código: copie o conteúdo de `wokwi/sketch.ino`.
 
-4. **Execute a simulação** ▶️
+Circuito: copie o conteúdo de `wokwi/diagram.json`.
 
----
+Resultado esperado:
 
-### 📋 Conteúdo para copiar diretamente:
-
-**CÓDIGO (sketch.ino):**
-```cpp
-// [Copie todo o conteúdo do arquivo sketch.ino]
-```
-
-**CIRCUITO (diagram.json):**
-```json
-// [Copie todo o conteúdo do arquivo diagram.json]
-```
-
-### ✅ Resultado Esperado:
-- Display 7 segmentos: contador 0-9 (1s cada)
-- LED vermelho: pisca 500ms
-- LED verde: pisca 750ms  
-- LED azul: pisca 1200ms
-- ADC: lê potenciômetro 100ms
-
-### 🎯 Demonstração das 5 tarefas TTS_V2 funcionando simultaneamente!
+- Display 7 segmentos: contador 0–9 (1 s por dígito)
+- LED1: piscando a cada 500 ms
+- LED2: piscando a cada 750 ms
+- LED3: piscando a cada 1200 ms
+- Leitura ADC: a cada 100 ms
