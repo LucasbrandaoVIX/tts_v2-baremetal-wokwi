@@ -2,6 +2,27 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [2.1.0] - 2025-08-25 - 🚨 CORREÇÃO CRÍTICA BARE METAL
+
+### 🔧 Corrigido
+- **PROBLEMA CRÍTICO**: sketch.ino estava usando bibliotecas Arduino
+- **❌ Removido**: `digitalWrite()`, `digitalRead()`, `analogRead()`, `pinMode()`
+- **✅ Implementado**: Funções bare metal com acesso direto aos registradores AVR
+
+### ✨ Adicionado
+- **Funções bare metal completas**:
+  - `set_pin_high()`, `set_pin_low()`, `toggle_pin()`
+  - `adc_init()`, `adc_read()` 
+  - `set_pin_output()`
+- **Documentação de conformidade** (BARE_METAL_COMPLIANCE.md)
+- **Controle direto de registradores**: DDRB, PORTB, ADMUX, ADCSRA, etc.
+
+### 🎯 Conformidade
+- **✅ 100% Bare Metal** - Zero bibliotecas Arduino
+- **✅ 5 Tarefas TTS** - Todos os requisitos atendidos
+- **✅ Wokwi Ready** - Mantém compatibilidade
+- **✅ Especificações** - Conforme instruções do projeto
+
 ## [2.0.0] - 2025-08-25
 
 ### ✨ Adicionado

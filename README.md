@@ -10,12 +10,13 @@ Este projeto implementa um sistema **TTS (Time Triggered Scheduler) versão 2** 
 
 ### ✨ Principais Características
 
-- 🔥 **100% Bare Metal** - Sem dependências de bibliotecas Arduino
+- 🔥 **100% Bare Metal** - ZERO bibliotecas Arduino (corrigido v2.1)
 - ⚡ **5 Tarefas Simultâneas** com períodos diferentes
 - 🎯 **Escalonamento Determinístico** com precisão de 1ms
 - 🔧 **Dual Target**: EFM32GG (hardware) + Arduino (simulação)
 - 📊 **Overhead Mínimo** (<0.1% de utilização da CPU)
 - 🚀 **Pronto para Wokwi** - Link direto disponível
+- ⚠️ **Conformidade Total** - Atende 100% das especificações do projeto
 
 ## Funcionalidades Implementadas
 
